@@ -1,0 +1,329 @@
+package chap2;
+ 
+/**
+ * 2.5 You have two numbers represented by a linked list, where each node
+ * contains a single digit. The digits are stored in reverse order, such that
+ * the Ts digit is at the head of the list. Write a function that adds the two
+ * numbers and returns the sum as a linked list.
+ * 
+ * EXAMPLE
+ * 
+ * Input:(7-> 1 -> 6) + (5 -> 9 -> 2).
+ * 
+ * That is,617 + 295. Output: 2 -> 1 -> 9.That is, 912.
+ * 
+ * FOLLOW UP Suppose the digits are stored in forward order. Repeat the above
+ * problem.
+ * 
+ * EXAMPLE
+ * 
+ * Input:(6 -> 1 -> 7) + (2 -> 9 -> 5). That is,617 + 295. Output: 9 -> 1 ->
+ * 2.That is, 912.
+ * 
+ * @author xl16
+ * 
+ */
+public class AddLists {
+ 
+	// -------------------- Add Reverse Lists---------//
+ 
+	/**
+	 * Go through the two lists, add each digit together. Use an extra int to
+	 * hold the value carried from the last digit. Be careful of the ends of the
+	 * lists.
+	 * 
+	 * Time: O(max(M,N)), Space O(max(M,N))
+	 * 
+	 */
+	public static Node addReverseListsIterative(Node n1, Node n2) {
+		if (n1 == null)
+			return n2;
+		if (n2 == null)
+			return n1;
+		Node result = null;
+		int sum = 0;
+		int carry = 0;
+		while (n1 != null || n2 != null) {
+			sum = carry;
+			if (n1 != null) {
+				sum += n1.data;
+				n1 = n1.next;
+			}
+			if (n2 != null) {
+				sum += n2.data;
+				n2 = n2.next;
+			}
+			carry = sum / 10;
+			if (result == null) {
+				result = new Node(sum % 10);
+			} else {
+				result.appendToTail(sum % 10);
+			}
+		}
+		if (carry == 1) {
+			result.appendToTail(1);
+		}
+ 
+		return result;
+	}
+ 
+	/**
+	 * Solution in the book. Recursive.
+	 * 
+	 * Time: O(max(M,N)), Space O(max(m,n))??
+	 */
+	public static Node addReverseListsRecursive(Node n1, Node n2, int carry) {
+		// Base case, append null to the list
+		if (n1 == null && n2 == null && carry == 0) {
+			return null;
+		}
+		int sum = carry;
+		if (n1 != null) {
+			sum += n1.data;
+		}
+		if (n2 != null) {
+			sum += n2.data;
+		}
+ 
+		Node result = new Node(sum % 10);
+ 
+		// Recursive case
+		if (n1 != null || n2 != null || sum >= 10) {
+			result.next = addReverseListsRecursive(n1 == null ? null : n1.next,
+					n2 == null ? null : n2.next, sum >= 10 ? 1 : 0);
+		}
+		return result;
+	}
+ 
+	// -----------------Follow up: Forward Lists-----------------//
+	/**
+	 * Convert them to numbers, add them up, then convert the sum to a forward
+	 * list.
+	 * 
+	 * Constraint: The sum must fall in the scope of Integer.
+	 * 
+	 * Time: O(M+N), Space O(M+N)
+	 * 
+	 * @param n1
+	 * @param n2
+	 * @return
+	 */
+	public static Node addForwardListsIterativeWithLen(Node n1, Node n2) {
+		if (n1 == null)
+			return n2;
+		if (n2 == null)
+			return n1;
+		int num1 = convertForwardListToNum(n1);
+		int num2 = convertForwardListToNum(n2);
+		return convertNumToForwardList(num1 + num2);
+	}
+ 
+	/**
+	 * Reverse the lists to backward order, add them up, reverse the result to
+	 * forward order
+	 * 
+	 * Time: O(m+n), Space: O(max(m,n)) if we are allowed to mutate the original
+	 * lists when reverting them (otherwise space is O(m+n) not implemented
+	 * here)
+	 * 
+	 * @param i
+	 * @return
+	 */
+	public static Node addForwardListsByReversion(Node n1, Node n2) {
+		Node n1Reverse = reverseList(n1);
+		Node n2Reverse = reverseList(n2);
+		return reverseList(addReverseListsIterative(n1Reverse, n2Reverse));
+	}
+ 
+	/**
+	 * Solution in the book. Recursive. First get the length of the lists, match
+	 * the shorter list with the length of the larger list by adding zeros to
+	 * its front. Then do recursive sum by adding the result to the head. Use a
+	 * wrapper class to pass values.
+	 * 
+	 * Time: O(m+n), Space O(M+N)
+	 * 
+	 * @param n
+	 * @return
+	 */
+	public Node addForwardListsByRecursion(Node n1, Node n2) {
+		int len1 = n1.length();
+		int len2 = n2.length();
+		// Pad the shorter list with zeros
+		if (len1 < len2) {
+			n1 = padList(n1, len2 - len1);
+		} else {
+			n2 = padList(n2, len1 - len2);
+		}
+ 
+		// Add the lists
+		PartialSum partialSum = addForwardListHealper(n1, n2);
+ 
+		// Don't forget the carry value for the very first node of the result
+		if (partialSum.carry != 0) {
+			Node result = insertToHead(partialSum.sumNode, partialSum.carry);
+			return result;
+		}
+		return partialSum.sumNode;
+	}
+ 
+	private PartialSum addForwardListHealper(Node n1, Node n2) {
+		// Base case
+		if (n1 == null && n2 == null) {
+			return new PartialSum();
+		}
+		// Add smaller digits recursively
+		// The two lists are of the same length, so we don't need to check if
+		// they are null here
+		PartialSum partialSum = addForwardListHealper(n1.next, n2.next);
+		int sum = partialSum.carry + n1.data + n2.data;
+		Node result = insertToHead(partialSum.sumNode, sum % 10);
+		partialSum.sumNode = result;
+		partialSum.carry = sum / 10;
+		return partialSum;
+ 
+	}
+ 
+	private Node padList(Node n, int padding) {
+		if (padding == 0) {
+			return n;
+		}
+		for (int i = 0; i < padding; i++) {
+			n = insertToHead(n, 0);
+		}
+		return n;
+	}
+ 
+	/**
+	 * Insert a new Node to an existing node. Don't insert to null list.
+	 * 
+	 * @param n
+	 * @param data
+	 * @return
+	 */
+	private Node insertToHead(Node n, int data) {
+		if (n == null) {
+			return n;
+		}
+		Node newHead = new Node(data);
+		newHead.next = n;
+		return newHead;
+	}
+ 
+	private class PartialSum {
+		public Node sumNode = null;
+		public int carry = 0;
+	}
+ 
+	// ---------- Utility Functions-----------//
+	private static Node reverseList(Node n) {
+		if (n == null || n.next == null) {
+			return n;
+		}
+		Node prev = n;
+		Node head = n;
+		Node next = n.next;
+ 
+		while (n != null) {
+			next = n.next;
+			prev.next = next;
+			n.next = head;
+			head = n;
+			n = next;
+		}
+		return head;
+	}
+ 
+	private static Node convertNumToForwardList(int i) {
+		Node n = null;
+		int digit = 0;
+		while (i > 0) {
+			// get one digit
+			digit = i % 10;
+			i = i / 10;
+			// Add to the head of the list
+			if (n == null) {
+				n = new Node(digit);
+			} else {
+				Node head = new Node(digit);
+				head.next = n;
+				n = head;
+			}
+		}
+		return n;
+	}
+ 
+	private static int convertForwardListToNum(Node n) {
+		int len = n.length();
+		int num = 0;
+		while (len > 0) {
+			len -= 1;
+			num += n.data * Math.pow(10, len);
+			n = n.next;
+		}
+		return num;
+	}
+ 
+	public static void main(String args[]) {
+		AddLists.Node n1 = new Node(3);
+		n1.appendToTail(9);
+		// n1.appendToTail(6);
+ 
+		AddLists.Node n2 = new Node(9);
+		// n2.appendToTail(1);
+		// n2.appendToTail(9);
+		// n2.appendToTail(4);
+ 
+		System.out.println("n1                 : " + n1.toString());
+		System.out.println("n2                 : " + n2.toString());
+ 
+		System.out.println("Sum                : "
+				+ addForwardListsByReversion(n1, n2).toString());
+	}
+ 
+	/**
+	 * Implementation of a simple LinkedList
+	 * 
+	 * @author xl16
+	 * 
+	 */
+	static class Node {
+		Node next = null;
+		int data;
+ 
+		public Node(int d) {
+			data = d;
+		}
+ 
+		public int length() {
+			int len = 0;
+			Node n = this;
+			while (n != null) {
+				len += 1;
+				n = n.next;
+			}
+			return len;
+		}
+ 
+		public void appendToTail(int d) {
+			Node end = new Node(d);
+			Node n = this;
+			while (n.next != null) {
+				n = n.next;
+			}
+			n.next = end;
+		}
+ 
+		public String toString() {
+			Node n = this;
+			String str = "";
+			while (n.next != null) {
+				str += String.valueOf(n.data) + "->";
+				n = n.next;
+			}
+			// The last node
+			str += String.valueOf(n.data) + "->null";
+			return str;
+		}
+	}
+}
