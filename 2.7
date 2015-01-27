@@ -1,0 +1,157 @@
+Solution1
+Idea: using two pointers, one slow and one fast, when fast met the tail, which means the slow meet the middle node, and reverse second half of the list, and contrast with the first half, if equal, which means the list is palindrome
+
+Time Complexity: O(n)
+Space Complexity: O(n)
+
+public static boolean palindromeList1(ListNode head){
+        if(head == null || head.next == null)
+            return true;
+ 
+        ListNode fast = head;
+        ListNode slow = head;
+        ListNode reverseHead;
+ 
+        while(fast != null && fast.next != null){
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        if(fast == null){
+            // size of the LinkedList is even
+            reverseHead = reverse(slow);
+        }else {
+            // size of the LinkedList is odd
+            reverseHead = reverse(slow.next);
+        }
+ 
+        while(reverseHead != null){
+            if(reverseHead.val != head.val){
+                return false;
+            }
+            reverseHead = reverseHead.next;
+            head = head.next;
+        }
+        return true;
+    }
+ 
+    // Reverse a LinkedList
+    public static ListNode reverse(ListNode head){
+        if(head.next == null)
+            return head;
+        ListNode curr = head;
+        ListNode preHead = null;
+        ListNode nextHead;
+ 
+        while(curr != null){
+            nextHead = curr.next;
+            curr.next = preHead;
+            preHead = curr;
+            curr = nextHead;
+        }
+        return preHead;
+    }
+ 
+ 
+ 
+ 
+ Solution2
+Idea: Instead of using extra List to store the second half the input list, we can simple use the stack to store the info.
+
+Time Complexity: O(n)
+Space Complexity: O(n)
+
+    public static boolean palindromeList2(ListNode head){
+        if(head == null || head.next == null)
+            return true;
+ 
+        ListNode fast = head;
+        ListNode slow = head;
+        Stack<Integer> stack = new Stack<Integer>();
+ 
+        while(fast != null && fast.next != null){
+            stack.push(slow.val);
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        if(fast != null){
+            // size of the LinkedList is odd, skip the middle node
+            slow = slow.next;
+        }
+ 
+        while(slow != null){
+            if (slow.val != stack.pop())
+                return false;
+            slow = slow.next;
+        }
+        return true;
+    }
+ 
+ 
+ 
+ 
+ Solution3
+Using Recursive, idea comes from Book
+
+public static void print(ListNode head) {
+        System.out.println("Input LinkedList:");
+        printList(head);
+        if(palindromeList2(head)){
+            System.out.println("The LinkedList is palindrome");
+        }else{
+            System.out.println("The LinkedList is not palindrome");
+        }
+    }
+ 
+    public static void printList(ListNode head) {
+        while (head.next != null) {
+            System.out.print(head.val + "->");
+            head = head.next;
+        }
+        System.out.println(head.val);
+    }
+ 
+    /**
+     * convert the input array to LinkedList, make the test more easily
+     */
+    private static ListNode arrayToLinkedList(int[] arr) {
+        if (arr == null || arr.length < 1)
+            return null;
+ 
+        ListNode fakeHead = new ListNode(0);
+        ListNode cur = fakeHead;
+        for (int element : arr) {
+            cur.next = new ListNode(element);
+            cur = cur.next;
+        }
+        return fakeHead.next;
+    }
+ 
+    public static void main(String[] args) {
+        ListNode test;
+ 
+        test = arrayToLinkedList(new int[]{1});
+        //print(test);
+ 
+        test = arrayToLinkedList(new int[]{1, 1});
+        print(test);
+ 
+        test = arrayToLinkedList(new int[]{1, 2});
+        print(test);
+ 
+        test = arrayToLinkedList(new int[]{1, 7, 1});
+        print(test);
+ 
+        test = arrayToLinkedList(new int[]{1, 7, 2});
+        print(test);
+ 
+        test = arrayToLinkedList(new int[]{1, 7, 7, 1});
+        print(test);
+ 
+        test = arrayToLinkedList(new int[]{1, 2, 7, 7, 7, 7, 2, 1});
+        print(test);
+ 
+        test = arrayToLinkedList(new int[]{1, 2, 7, 7, 7, 2, 1});
+        print(test);
+ 
+ 
+    }
