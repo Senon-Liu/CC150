@@ -1,0 +1,66 @@
+Solution1
+Idea: Using a hashSet to store the node info
+
+Notice: two different object may have the same hashCode, java can use equals() method to avoid hash collide(one way to solve hash collide in java), so in the implementation, we cannot only use the hashCode to distinguish different object.
+More Explanation, look here
+
+Time Complexity: O(n)
+Space Complexity: O(n)
+
+public ListNode firstNodeInCircle1(ListNode head){
+        if(head == null || head.next == null)
+            return null;
+ 
+        Set<ListNode> hashSet = new HashSet<ListNode>();
+        while(head != null){
+            if(hashSet.contains(head)){
+                return head;
+            }else{
+                hashSet.add(head);
+                head = head.next;
+            }
+        }
+        return null;
+    }
+ 
+ 
+ Solution2
+Idea: same in Book
+
+use two pointers: fast and slow. In the first round, the speed of fast is twice the speed of slow, move these two pointers until they meet each other(circle exists), otherwise(no circle); When they meet, restart slow from header pointer and fast from the next node with the same speed as slow. move them one node by one node, when they meet again, that’s where the circle starts.
+
+Time Complexity: O(n)
+Space Complexity: O(1)
+
+public ListNode firstNodeInCircle2(ListNode head){
+        if(head == null || head.next == null)
+            return null;
+        ListNode fast = head;
+        ListNode slow = head;
+ 
+        // check whether there is a circle in LinkedList
+        while(fast != null && fast.next != null){
+            fast = fast.next.next;
+            slow = slow.next;
+            if(slow == fast)
+                break;
+        }
+ 
+        // the fast meet the tail of the LinkedList => no circle
+        if(fast == null || fast.next == null){
+            // System.out.println("no circle in LinkedList");
+            return null;
+        }
+ 
+        // move slow to head, keep fast at meeting point. Each are k steps from the loop start.
+        // If they move at the same pace, they must meet at loop start
+        slow = head;
+        while(slow != fast){
+            slow = slow.next;
+            fast = fast.next;
+        }
+ 
+        // both the fast and slow point to the start of the loop
+        return fast;
+    }
+ 
