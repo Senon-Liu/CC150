@@ -80,6 +80,8 @@ public class pushTest {
             System.out.print(l.val + " ");
             l = l.next;
         }
+
+
     }
 
 }
